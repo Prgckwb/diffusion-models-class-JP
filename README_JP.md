@@ -1,4 +1,4 @@
-# Hugging Face 拡散モデルコース
+# Hugging Face 拡散モデル講座
 
 [![License](https://img.shields.io/static/v1?label=License&message=Apache&color=<Yellow>)](https://github.com/huggingface/diffusion-models-class/blob/main/LICENSE)
 &nbsp;
@@ -8,7 +8,7 @@
 &nbsp;
 ![PyTorch](https://img.shields.io/badge/PyTorch-%23EE4C2C.svg?style=flat-square&logo=PyTorch&logoColor=white)
 
-この無料コースでは、以下のことができます
+この無料講座では、以下のことができます
 
 - 👩‍🎓 拡散モデルの理論を学ぶ
 - 🧨 人気のある 🤗 Diffusersライブラリを使って、画像や音声を生成する方法を学ぶ
@@ -51,7 +51,7 @@
 
 はい、完全に無料です🥳。
 
-**コースに参加するために、Hugging Faceのアカウントを持っている必要がありますか？**
+**この講座に参加するために、Hugging Faceのアカウントを持っている必要がありますか？**
 
 はい、カスタムモデルやパイプラインをhubにプッシュするには、アカウントが必要です（無料）🤗。
 
@@ -59,15 +59,15 @@
 
 **講義の形式は？**
 
-このコースは少なくとも**4ユニット**で構成され、時間の経過とともにオーディオのための拡散などのトピックが追加される予定です。
+この講座は少なくとも**4ユニット**で構成され、時間の経過とともにオーディオのための拡散などのトピックが追加される予定です。
 
 各ユニットは、いくつかの理論と背景、そして1つまたは複数の実践的なノートブックで構成されています。
 また、いくつかのユニットには推奨プロジェクトが含まれており、優れたパイプラインやデモのコンテストや賞品を用意しています（詳細は未定）。
 
 ## 🌎 言語と翻訳
 
-この講座は、🤗コミュニティのメンバーが翻訳を始めています
-このコースは[Hugging Faceのウェブサイト](https://huggingface.co/)
+この講座は、🤗コミュニティのメンバーが翻訳を始めています！
+この講座は[Hugging Faceのウェブサイト](https://huggingface.co/)
 でホストする予定なので、もしあなたが翻訳を提供することに興味があるなら、私たちが英語のコンテンツを最終形にするまで待つことをお勧めします。
 
 | Language                                                                               | Authors                                                                                 |
