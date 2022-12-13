@@ -1,71 +1,99 @@
-# Unit 1: An Introduction to Diffusion Models
+# ユニット1: 拡散モデル入門
 
-Welcome to Unit 1 of the Hugging Face Diffusion Models Course! In this unit you will learn the basics of how diffusion 
-models work and how to create your own using the 🤗 Diffusers library.
+Hugging Face 拡散モデル講座のユニット1へようこそ！
+このユニットでは、拡散モデルの仕組みの基本を学び、🤗Diffusersライブラリを使用して独自のモデルを作成する方法について学びます。
 
-## Start this Unit :rocket:
+## このユニットを開始する :rocket:
 
-Here are the steps for this unit:
+以下、このユニットの手順を説明します。
 
-- Make sure you've [signed up for this course](https://huggingface.us17.list-manage.com/subscribe?u=7f57e683fa28b51bfc493d048&id=ef963b4162) so that you can be notified when new material is released
-- Read through the introductory material below as well as any of the additional resources that sound interesting
-- Check out the _**Introduction to Diffusers**_  notebook below to put theory into practice with the 🤗 Diffusers library
-- Train and share your own diffusion model using the notebook or the linked training script
-- (Optional) Dive deeper with the _**Diffusion Models from Scratch**_ notebook if you're interested seeing a minimal from-scratch implementation and exploring the different design decisions involved
+- 新しい教材がリリースされたときに通知されるように、このコースに[サインアップ](https://huggingface.us17.list-manage.com/subscribe?u=7f57e683fa28b51bfc493d048&id=ef963b4162)
+していることを確認してください
+- 以下の紹介資料と、興味のありそうな追加資料に目を通す
+- 以下の _**Diffusers入門**_ ノートブックで、🤗Diffusersライブラリを使った理論の実践をチェックする
+- ノートブックまたはリンクされたトレーニングスクリプトを使用して、独自の拡散モデルを学習し、共有する
+- (オプション) _**ゼロから始める拡散モデル**_ ノートブックで、最小限の実装を確認し、設計上のさまざまな思考に興味がある場合は、さらに深く掘り下げる
 
+:loudspeaker: [Discord](https://huggingface.co/join/discord)
+に参加するのを忘れないでください。この教材について議論したり、作ったものを `#diffusion-models-class` チャンネルで共有したりすることができます。
 
-:loudspeaker: Don't forget to join the [Discord](https://huggingface.co/join/discord), where you can discuss the material and share what you've made in the `#diffusion-models-class` channel.
- 
-## What Are Diffusion Models?
+## 拡散モデルとは？
 
-Diffusion models are a relatively recent addition to a group of algorithms known as 'generative models'. The goal of generative modelling is to learn to **generate** data, such as images or audio, given a number of training examples. A good generative model will create a **diverse** set of outputs that resemble the training data without being exact copies. How do diffusion models achieve this? Let's focus on the image generation case for illustrative purposes.
+拡散モデルは、「生成モデル」として知られるアルゴリズム群に比較的最近追加されたものです。
+生成モデリングの目標は、多くの学習例が与えられたときに、画像や音声などのデータを**生成**するように学習することです。
+優れた生成モデルは、学習データをそのままコピーすることなく、
+それに類似した**多様な**出力セットを作成することができます。
+拡散モデルはどのようにしてこれを実現するのでしょうか？
+ここでは、説明のために画像生成のケースに焦点を当てましょう。
 
 <p align="center">
-    <img src="https://user-images.githubusercontent.com/10695622/174349667-04e9e485-793b-429a-affe-096e8199ad5b.png" width="800"/>
+    <img src="https://user-images.githubusercontent.com/10695622/174349667-04e9e485-793b-429a-affe-096e8199ad5b.png" width="800" alt=""/>
     <br>
-    <em> Figure from DDPM paper (https://arxiv.org/abs/2006.11239). </em>
+    <em> DDPM論文からの図 (https://arxiv.org/abs/2006.11239). </em>
 <p>
 
-The secret to diffusion models' success is the iterative nature of the diffusion process. Generation begins with random noise, but this is gradually refined over a number of steps until an output image emerges. At each step, the model estimates how we could go from the current input to a completely denoised version. However, since we only make a small change at every step, any errors in this estimate at early stages (where predicting the final output is extremely difficult) can be corrected in later updates. 
+拡散モデルの成功の秘密は、拡散プロセスの反復性にあります。
+生成はランダムなノイズから始まりますが、出力画像が現れるまで、
+何段階にもわたって徐々に洗練されていきます。各ステップにおいて、
+モデルは現在の入力から完全にノイズ除去されたバージョンまでどのように進むかを推定します。
+しかし、各ステップで小さな変更を加えるだけなので、
+初期段階（最終的な出力を予測することが非常に難しい）でのこの推定値の誤差は、
+後の更新で修正することができます。
 
-Training the model is relatively straightforward compared to some other types of generative model. We repeatedly
-1) Load in some images from the training data
-2) Add noise, in different amounts. Remember, we want the model to do a good job estimating how to 'fix' (denoise) both extremely noisy images and images that are close to perfect.
-3) Feed the noisy versions of the inputs into the model
-4) Evaluate how well the model does at denoising these inputs
-5) Use this information to update the model weights
+モデルの学習は、他の種類の生成モデルに比べて比較的簡単である。私たちは繰り返し
 
-To generate new images with a trained model, we begin with a completely random input and repeatedly feed it through the model, updating it each time by a small amount based on the model prediction. As we'll see, there are a number of sampling methods that try to streamline this process so that we can generate good images with as few steps as possible.
+1) 学習データから画像を読み込む
+2) 様々な量のノイズを加える。ここで私たちは、『限りなくノイズに近い画像と完璧に近い画像の両方をどのように「修正」（ノイズ除去）するかについて、モデルに良い仕事をしてほしい』という事を忘れないでください
+3) 入力にノイズを含んだものをモデルに与える
+4) これらの入力に対して、モデルがどの程度ノイズ除去ができるかを評価する
+5) この情報をもとに、モデルの重みを更新する
 
-We will show each of these steps in detail in the hands-on notebooks here in unit 1. In unit 2, we will look at how this process can be modified to add additional control over the model outputs through extra conditioning (such as a class label) or with techniques such as guidance. And units 3 and 4 will explore an extremely powerful diffusion model called Stable Diffusion, which can generate images given text descriptions.  
+学習されたモデルを使って新しい画像を生成するには、まず完全にランダムな入力から始めて、
+それを繰り返しモデルに与え、モデルの予測に基づいて毎回少しずつ更新していきます。
+後述するように、このプロセスを効率化し、できるだけ少ないステップで良い画像を生成できるようにするためのサンプリング手法が数多く存在する。
 
-## Hands-On Notebooks
+ユニット1では、これらの各ステップをハンズオンノートブックで詳しく紹介します。ユニット2では、このプロセスをどのように変更し、追加の条件付け（クラスラベルなど）やガイダンスなどの手法によって、モデルの出力にさらなる制御を加えることができるかを見ていきます。そしてユニット3と4では、テキストの説明文から画像を生成することができる、Stable
+Diffusionと呼ばれる非常に強力な拡散モデルについて検討する。
 
-At this point, you know enough to get started with the accompanying notebooks! The two notebooks here come at the same idea in different ways. 
- 
-| Chapter                                     | Colab                                                                                                                                                                                               | Kaggle                                                                                                                                                                                                   | Gradient                                                                                                                                                                               | Studio Lab                                                                                                                                                                                                   |
-|:--------------------------------------------|:----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|:---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|:---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|:-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Introduction to Diffusers                                | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/huggingface/diffusion-models-class/blob/main/unit1/01_introduction_to_diffusers.ipynb)              | [![Kaggle](https://kaggle.com/static/images/open-in-kaggle.svg)](https://kaggle.com/kernels/welcome?src=https://github.com/huggingface/diffusion-models-class/blob/main/unit1/01_introduction_to_diffusers.ipynb)              | [![Gradient](https://assets.paperspace.io/img/gradient-badge.svg)](https://console.paperspace.com/github/huggingface/diffusion-models-class/blob/main/unit1/01_introduction_to_diffusers.ipynb)              | [![Open In SageMaker Studio Lab](https://studiolab.sagemaker.aws/studiolab.svg)](https://studiolab.sagemaker.aws/import/github/huggingface/diffusion-models-class/blob/main/unit1/01_introduction_to_diffusers.ipynb)              |
-| Diffusion Models from Scratch                                | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/huggingface/diffusion-models-class/blob/main/unit1/02_diffusion_models_from_scratch.ipynb)              | [![Kaggle](https://kaggle.com/static/images/open-in-kaggle.svg)](https://kaggle.com/kernels/welcome?src=https://github.com/huggingface/diffusion-models-class/blob/main/unit1/02_diffusion_models_from_scratch.ipynb)              | [![Gradient](https://assets.paperspace.io/img/gradient-badge.svg)](https://console.paperspace.com/github/huggingface/diffusion-models-class/blob/main/unit1/02_diffusion_models_from_scratch.ipynb)              | [![Open In SageMaker Studio Lab](https://studiolab.sagemaker.aws/studiolab.svg)](https://studiolab.sagemaker.aws/import/github/huggingface/diffusion-models-class/blob/main/unit1/02_diffusion_models_from_scratch.ipynb)              |
+## ハンズオンノートブック
 
-In _**Introduction to Diffusers**_, we show the different steps described above using building blocks from the diffusers library. You'll quickly see how to create, train and sample your own diffusion models on whatever data you choose. By the end of the notebook, you'll be able to read and modify the example training script to train diffusion models and share them with the world! This notebook also introduces the main exercise associated with this unit, where we will collectively attempt to figure out good 'training recipes' for diffusion models at different scales - see the next section for more info.
+この時点で、付属のノートブックに取り掛かるのに十分な知識があることになります！
+この2つのノートは、同じアイデアを異なる方法で表現しています。
 
-In _**Diffusion Models from Scratch**_ we show those same steps (adding noise to data, creating a model, training and sampling) but implemented from scratch in PyTorch as simply as possible. Then we compare this 'toy example' with the diffusers version, noting how the two differ and where improvements have been made. The goal here is to gain familiarity with the different components and the design decisions that go into them, so that when you look at a new implementation you can quickly identify the key ideas.
+| 章                   | Colab                                                                                                                                                                                                       | Kaggle                                                                                                                                                                                                                | Gradient                                                                                                                                                                                            | Studio Lab                                                                                                                                                                                                           |
+|:--------------------|:------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|:----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|:----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|:---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| Diffusers入門         | [![Colabで開く](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/huggingface/diffusion-models-class/blob/main/unit1/01_introduction_to_diffusers.ipynb)     | [![Kaggle](https://kaggle.com/static/images/open-in-kaggle.svg)](https://kaggle.com/kernels/welcome?src=https://github.com/huggingface/diffusion-models-class/blob/main/unit1/01_introduction_to_diffusers.ipynb)     | [![Gradient](https://assets.paperspace.io/img/gradient-badge.svg)](https://console.paperspace.com/github/huggingface/diffusion-models-class/blob/main/unit1/01_introduction_to_diffusers.ipynb)     | [![SageMaker Studio Labで開く](https://studiolab.sagemaker.aws/studiolab.svg)](https://studiolab.sagemaker.aws/import/github/huggingface/diffusion-models-class/blob/main/unit1/01_introduction_to_diffusers.ipynb)     |
+| ゼロから始めるDiffusionモデル | [![Colabで開く](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/huggingface/diffusion-models-class/blob/main/unit1/02_diffusion_models_from_scratch.ipynb) | [![Kaggle](https://kaggle.com/static/images/open-in-kaggle.svg)](https://kaggle.com/kernels/welcome?src=https://github.com/huggingface/diffusion-models-class/blob/main/unit1/02_diffusion_models_from_scratch.ipynb) | [![Gradient](https://assets.paperspace.io/img/gradient-badge.svg)](https://console.paperspace.com/github/huggingface/diffusion-models-class/blob/main/unit1/02_diffusion_models_from_scratch.ipynb) | [![SageMaker Studio Labで開く](https://studiolab.sagemaker.aws/studiolab.svg)](https://studiolab.sagemaker.aws/import/github/huggingface/diffusion-models-class/blob/main/unit1/02_diffusion_models_from_scratch.ipynb) |
 
-## Project Time
+_**Diffusers入門**_ では、diffusersライブラリのビルディングブロックを使用して、上記の様々なステップを紹介します。
+どのようなデータであっても、独自の拡散モデルを作成し、学習し、サンプリングする方法をすぐに理解することができます。
+このノートブックの終わりには、サンプルの学習スクリプトを読んで修正し、拡散モデルを学習し、世界と共有することができるようになります。
+このノートブックはまた、このユニットに関連した主な演習を紹介します。ここでは、様々なスケールの拡散モデルのための良い「学習レシピ」を共同で見つけようとします。
+詳細は次のセクションを参照してください。
 
-Now that you've got the basics down, have a go at training one or more diffusion models! Some suggestions are included at the end of the _**Introduction to Diffusers**_ notebook. Make sure to share your results, training recipes and findings with the community so that we can collectively figure out the best ways to train these models.
+_**ゼロから始めるDiffusers入門**_では、同じステップ（データへのノイズの追加、モデルの作成、トレーニング、サンプリング）をPyTorchで一から実装し、できる限りシンプルに表示しています。
+そして、この「おもちゃの例」をdiffusersのバージョンと比較し、
+両者がどのように違うのか、どこが改善されたのかを指摘します。
+ここでのゴールは、異なるコンポーネントとそこに込められた設計上の決定に慣れ、新しい実装を見るときに、重要なアイデアを素早く識別できるようにすることです。
 
-## Some Additional Resources
- 
-[The Annotated Diffusion Model](https://huggingface.co/blog/annotated-diffusion) is a very in-depth walk-through of the code and theory behind DDPMs with 
- maths and code showing all the different components. It also links to a number of papers for further reading.
- 
-Hugging Face documentation on [Unconditional Image-Generation
-](https://huggingface.co/docs/diffusers/training/unconditional_training) for some examples of how to train diffusion models using the official training example script, including code showing how to create your own dataset. 
+## プロジェクトタイム
 
-AI Coffee Break video on Diffusion Models: https://www.youtube.com/watch?v=344w5h24-h8
+さて、基本を押さえたところで、1つまたは複数の拡散モデルを学習してみてください。
+いくつかの提案は、_**Diffusers入門**_ ノートブックの最後に記載されています。
+あなたの結果、学習レシピ、発見をコミュニティと共有し、
+これらのモデルを学習するための最良の方法を一緒に考えましょう。
 
-Yannic Kilcher Video on DDPMs: https://www.youtube.com/watch?v=W-O7AZNzbzQ
+## その他の資料
 
-Found more great resources? Let us know and we'll add them to this list.
+[注釈付き普及モデル](https://huggingface.co/blog/annotated-diffusion)
+は、DDPMの背後にあるコードと理論について、数学とコードですべての異なる構成要素を示しながら、非常に詳細なウォークスルーとなっています。また、さらに読み進めるために多くの論文にリンクしています。
+
+[条件なし画像生成](https://huggingface.co/docs/diffusers/training/unconditional_training)
+のHugging Faceのドキュメント に、公式の学習例スクリプトを用いた拡散モデルの学習方法の例と、
+独自のデータセットを作成する方法を示すコードが掲載されています。
+
+Diffusionモデルについての AI コーヒーブレイク動画: https://www.youtube.com/watch?v=344w5h24-h8
+
+Yannic KilcherのDDPMの動画: https://www.youtube.com/watch?v=W-O7AZNzbzQ
+
+もっと素晴らしいリソースがありますか？このリストに追加します。
